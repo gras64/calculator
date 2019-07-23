@@ -1,8 +1,9 @@
-# <img src="https://raw.githack.com/FortAwesome/Font-Awesome/master/svgs/solid/robot.svg" card_color="#40DBB0" width="50" height="50" style="vertical-align:bottom"/> Calculator
-Calculte numbers
+## Tags
+# <img src='https://raw.githack.com/FortAwesome/Font-Awesome/master/svgs/solid/calculator.svg' card_color='#000000' width='50' height='50' style='vertical-align:bottom'/> Calculator
+a simple calculator
 
 ## About
-Calculator
+the skill enables simple computational tasks to be solved
 
 ## Examples
 * "What is 4 and 5"
@@ -10,11 +11,10 @@ Calculator
 * "Add 6 and 9"
 
 ## Credits
-gars64
+gras64
 
 ## Category
-**Productivity**
-Daily
+Productivity
 
 ## Tags
-
+#'calculation
