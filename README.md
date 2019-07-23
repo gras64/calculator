@@ -6,9 +6,14 @@ a simple calculator
 the skill enables simple computational tasks to be solved
 
 ## Examples
-* "What is 4 and 5"
-* "Multiply 2 and 4"
-* "Add 6 and 9"
+* "what is 1 and 2"
+* "addiere 4 and 5"
+* "divide 6 by 2"
+* "divide 9 and 3"
+* "what is 9 times 7"
+* "multiply 2 with 3"
+* "what is 5 minus 4"
+* "subtract 7 with 6"
 
 ## Credits
 gras64
