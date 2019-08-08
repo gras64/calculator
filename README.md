@@ -22,3 +22,10 @@ Productivity
 
 ## Tags
 #'calculation
+
+## TO Do
+* longer inquiries
+* net gross converter
+* Pie, root, break calculations
+* units converters
+* different formulas
