@@ -1,0 +1,3 @@
+(rechne|teile|dividiere) (?P<firstNr>\w+) (\+|\-|plus|minus|mit) (?P<secondNr>\w+)
+(wurzel von) (?P<firstNr>\w+)
+(1,|1\.) (pi|phi)
