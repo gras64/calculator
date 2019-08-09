@@ -4,8 +4,14 @@ from mycroft.util.parse import extract_number
 class Calculator(MycroftSkill):
     def __init__(self):
         MycroftSkill.__init__(self)
+        addition_intent = IntentBuilder("calculate").
+            require("numberone").require("operationone").
+            require("numbertwo").
+            optionally("operationtwo").build()
+        self.register_intent(addition_intent,
+                             self.handle_addition_intent)
 
-    @intent_file_handler('addition.intent')
+    def handle_hello_world_intent(self, message):
     def addition_intent(self, message):
         if message.data.get("numberone"):
             numberone = message.data.get("numberone")
