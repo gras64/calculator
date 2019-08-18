@@ -1,0 +1,24 @@
+{
+    "name": "Calculator",
+    "skillMetadata": {
+        "sections": [
+            {
+                "name": "Gross Net Calculator",
+                "fields": [
+                    {
+                        "name": "tax",
+                        "type": "text",
+                        "label": "indicate that VAT rate %",
+                        "value": "‎9.3"
+                    },
+                    {
+                        "name": "sale",
+                        "type": "text",
+                        "label": "give your sales mark %",
+                        "value": "30"
+                    }
+                ]
+            }
+        ]
+    }
+}

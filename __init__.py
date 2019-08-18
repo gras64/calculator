@@ -1,9 +1,17 @@
 from mycroft import MycroftSkill, intent_file_handler
 from mycroft.util.parse import extract_number
 
+_author__ = 'gras64'
+
 class Calculator(MycroftSkill):
     def __init__(self):
         MycroftSkill.__init__(self)
+
+    def initialize(self):
+        self.tax = self.settings.get('tax') \
+            if self.settings.get('tax') else "9.3"
+        self.sale = self.settings.get('sale') \
+            if self.settings.get('sale') else "30"
 
     @intent_file_handler('addition.intent')
     def addition_intent(self, message):
@@ -113,6 +121,10 @@ class Calculator(MycroftSkill):
         self.speak_dialog("calculator",
                             data={"answer": answer})
 
+    @intent_handler(IntentBuilder("grossnet").require("tell_me").optionally("net").
+                    optionally("gross").optionally("purchase").optionally("sale").require("calculator"))
+    def gross_net(self, message):
+        self.speak("test")
 
     def shutdown(self):
         super(Calculator, self).shutdown()
