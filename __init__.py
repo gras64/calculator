@@ -1,4 +1,5 @@
-from mycroft import MycroftSkill, intent_file_handler
+from mycroft import MycroftSkill, intent_file_handler, intent_handler
+from adapt.intent import IntentBuilder
 from mycroft.util.parse import extract_number
 
 _author__ = 'gras64'
