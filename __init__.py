@@ -5,9 +5,9 @@ class Calculator(MycroftSkill):
     def __init__(self):
         MycroftSkill.__init__(self)
         calculation_intent = IntentBuilder("calculate").
-            require("numberone").require("operationone").
-            require("numbertwo").
-            optionally("operationtwo").build()
+                            require("numberone").require("operationone").
+                            require("numbertwo").
+                            optionally("operationtwo").build()
         self.register_intent(calculation_intent,
                              self.handle_calculation_intent)
 
