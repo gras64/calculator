@@ -18,7 +18,7 @@ class Calculator(MycroftSkill):
         self.log.info("boot")
     
     @intent_handler(IntentBuilder("cal").one_of("tell_me", "replacement_word").optionally("calculate").
-                    one_of("addition", "division", "multiplication", "subtraction").build())
+                    one_of("addition", "division", "multiplication", "subtraction", "net", "gross", "sale").build())
     def calculate_handler(self, message):
             self.log.info("boot") #require("number").
             text = message.utterance_remainder()
@@ -32,7 +32,8 @@ class Calculator(MycroftSkill):
         text = self.oparator_worker(text)
         text = self.num_cleaner(text)
         text = self.oparator_validator(text)
-        text = self.oparator_calculator(text)
+        if not text is False:
+            text = self.oparator_calculator(text)
 
 
     def num_worker(self, line): ## translate numbers to int
@@ -41,21 +42,22 @@ class Calculator(MycroftSkill):
         if not extract_numbers(line, lang=self.lang) == []:
             num = extract_numbers(line, short_scale=False, ordinals=False,
                         lang=self.lang)
-        num = re.sub(r'(\.0)', '', str(num))
-        num = re.findall(r'\d+', num)
+        #num = re.sub(r'(\.0)', '', str(num))
+        #num = re.findall(r'\d+', num)
         if not num is False:
             for item in num:
-                #print("item #"+item)
-                if not pronounce_number(int(item), lang=self.lang, short_scale=True) ==[]:
-                    number = pronounce_number(int(item), lang=self.lang, short_scale=True)
+                print("item #"+str(item))
+                if not pronounce_number(float(item), lang=self.lang, short_scale=True) ==[]:
+                    number = pronounce_number(float(item), lang=self.lang, short_scale=True)
                 else:
                     number = ""
                 line = line.replace(number, str(item))
+                self.log.info(str(line))
         return line
 
     def num_cleaner(self, text):
-        text = re.sub("[^0-9/* +-]", "", text) #delete text
-        text = re.findall(r'[0-9][0-9/* +-]+[0-9]', text) # only operator and number
+        text = re.sub("[^0-9/* +-.,]", "", text) #delete text
+        text = re.findall(r'[0-9][0-9/* +-.,]+[0-9]', text) # only operator and number
         return text
         #* 4 + 5 / 7 to  4 + 5 / 7
 
@@ -66,7 +68,7 @@ class Calculator(MycroftSkill):
             #self.log.info("text1 "+text+" "+word)
             if self.oparator_match(word):
                 for s in line.split():
-                    if self.voc_match(s, "replacement_word"):
+                    if self.voc_match(s, "replacement.word"):
                         text = text.replace(s, str(word))
             operator = self.oparator_match(word)
             if not operator is None:
@@ -82,20 +84,47 @@ class Calculator(MycroftSkill):
             operator = "*"
         elif self.voc_match(word, "division"):
             operator = "/"
+        elif self.voc_match(word, "net"):
+            operator = "*"+0.+100-float(self.tax)
+        elif self.voc_match(word, "gross"):
+            operator = "*"+1.+float(self.tax)
         else:
             operator = None
         return operator
 
     def oparator_calculator(self, text):
         calculation = text[0]
-        result = eval(text[0])
+        result = round(eval(text[0]), 2)
+        if self.lang == "de-de":
+            calculation = calculation.replace(".", ",")
+            result = str(result).replace(".", ",")
         self.speak_dialog("result", data={"calculation":calculation, "result":result})
         self.log.info(eval(text[0]))
         pass
 
-    def oparator_validator(self, text): #### todo
+    def oparator_validator(self, text): #### calculated and reduced until calculation possible
+        f = True
+        while f is True:
+            try:
+                result = round(eval(text[0]), 2)
+                f = False
+            except SyntaxError:
+                text = text[0].split(' ')
+                text.pop()
+                if len(text) <= 1:
+                    text = text.clear()
+                    f = False
+                    continue
+                text[0] = " ".join(text)
+                self.log.info("text fail and fix"+str(text))
+                f = True
+        else:
+            if text == None:
+                responce  = self.get_response("fail")
+                self.calculate_worker(responce)
+                return False
+        self.log.info("text "+str(text))
         return text
-        pass
 
 
     def gross_net(self, message):
