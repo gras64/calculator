@@ -11,12 +11,17 @@ class Calculator(MycroftSkill):
         MycroftSkill.__init__(self)
 
     def initialize(self):
-        self.tax = self.settings.get('tax') \
+        tax = self.settings.get('tax') \
             if self.settings.get('tax') else "9.3"
-        self.sale = self.settings.get('sale') \
+        sale = self.settings.get('sale') \
             if self.settings.get('sale') else "30"
         self.log.info("boot")
-    
+        self.sale = "* 1."+str(sale)
+        #self.net = "* 0."+str((100-str(tax)))
+        self.gross = "* 1."+str(tax)
+        self.log.info("calculator load sale: "+self.sale+" gross: "+self.gross)
+        #" net: "+self.net+
+
     @intent_handler(IntentBuilder("cal").one_of("tell_me", "replacement_word").optionally("calculate").
                     one_of("addition", "division", "multiplication", "subtraction", "net", "gross", "sale").build())
     def calculate_handler(self, message):
@@ -85,9 +90,11 @@ class Calculator(MycroftSkill):
         elif self.voc_match(word, "division"):
             operator = "/"
         elif self.voc_match(word, "net"):
-            operator = "*"+0.+100-float(self.tax)
+            operator = self.net # *1.093
         elif self.voc_match(word, "gross"):
-            operator = "*"+1.+float(self.tax)
+            operator = self.gross # *0.907
+        elif self.voc_match(word, "sale"):
+            operator = self.sale             
         else:
             operator = None
         return operator
