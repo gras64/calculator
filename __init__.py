@@ -11,8 +11,8 @@ class Calculator(MycroftSkill):
         MycroftSkill.__init__(self)
 
     def initialize(self):
-        tax = self.settings.get('tax') \
-            if self.settings.get('tax') else "9.3"
+        tax = self.settings.get('tax').replace(",", ".") \
+            if self.settings.get('tax').replace(",", ".") else "9.3"
         sale = self.settings.get('sale') \
             if self.settings.get('sale') else "30"
         self.log.info("boot")
@@ -112,8 +112,8 @@ class Calculator(MycroftSkill):
         f = True
         while f is True:
             try:
-                result = round(eval(text[0]), 2)
-                f = False
+                if not eval(text[0]) is False:
+                    f = False
             except SyntaxError:
                 text = text[0].split(' ')
                 text.pop()
