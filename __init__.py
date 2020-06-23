@@ -16,11 +16,10 @@ class Calculator(MycroftSkill):
         sale = self.settings.get('sale') \
             if self.settings.get('sale') else "30"
         self.log.info("boot")
-        self.sale = "* 1."+str(sale)
-        #self.net = "* 0."+str((100-str(tax)))
-        self.gross = "* 1."+str(tax)
-        self.log.info("calculator load sale: "+self.sale+" gross: "+self.gross)
-        #" net: "+self.net+
+        self.sale = "* 1."+str(sale) #### todo
+        #self.net = "* 0."+str((100-str(tax))) ### todo
+        self.gross = "* 1."+str(tax) ####todo
+        #self.log.info("calculator load sale: "+self.sale+" gross: "+self.gross+" net: "+self.net)
 
     @intent_handler(IntentBuilder("cal").one_of("tell_me", "replacement_word").optionally("calculate").
                     one_of("addition", "division", "multiplication", "subtraction", "net", "gross", "sale").build())
