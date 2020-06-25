@@ -15,11 +15,10 @@ class Calculator(MycroftSkill):
             if self.settings.get('tax').replace(",", ".") else "9.3"
         sale = self.settings.get('sale') \
             if self.settings.get('sale') else "30"
-        self.log.info("boot")
-        self.sale = "* 1."+str(sale) #### todo
-        #self.net = "* 0."+str((100-str(tax))) ### todo
-        self.gross = "* 1."+str(tax) ####todo
-        #self.log.info("calculator load sale: "+self.sale+" gross: "+self.gross+" net: "+self.net)
+        self.sale = "* "+str((100+float(sale))/100)
+        self.net = "* "+str((100-float(tax))/100)
+        self.gross = "* "+str((100+float(tax))/100)
+        self.log.info("calculator factor load: sale="+self.sale+" gross="+self.gross+" net="+self.net)
 
     @intent_handler(IntentBuilder("cal").one_of("tell_me", "replacement_word").optionally("calculate").
                     one_of("addition", "division", "multiplication", "subtraction", "net", "gross", "sale").build())
@@ -60,8 +59,8 @@ class Calculator(MycroftSkill):
         return line
 
     def num_cleaner(self, text):
-        text = re.sub("[^0-9/* +-.,]", "", text) #delete text
-        text = re.findall(r'[0-9][0-9/* +-.,]+[0-9]', text) # only operator and number
+        text = re.sub("[^0-9/* +-.),(]", "", text) #delete text
+        text = re.findall(r'[0-9(][0-9/* +-.),(]+[)0-9]', text) # only operator and number
         return text
         #* 4 + 5 / 7 to  4 + 5 / 7
 
@@ -75,8 +74,13 @@ class Calculator(MycroftSkill):
                     if self.voc_match(s, "replacement.word"):
                         text = text.replace(s, str(word))
             operator = self.oparator_match(word)
-            if not operator is None:
-                text = text.replace(word, str(operator))
+            if not operator is None: ##### todo problem with "and from that"
+                if operator is "from_that":
+                    text = text.replace(word, ")")
+                    text = "( "+text
+                else:
+                    text = text.replace(word, str(operator))
+            self.log.info("after operator"+text)
         return text
         
     def oparator_match(self, word):
@@ -93,7 +97,13 @@ class Calculator(MycroftSkill):
         elif self.voc_match(word, "gross"):
             operator = self.gross # *0.907
         elif self.voc_match(word, "sale"):
-            operator = self.sale             
+            operator = self.sale
+        elif self.voc_match(word, "clip.on"):
+            operator = "("
+        elif self.voc_match(word, "clip.off"):
+            operator = ")"
+        elif self.voc_match(word, "from.that"):
+            operator = "from_that"           
         else:
             operator = None
         return operator
@@ -106,9 +116,11 @@ class Calculator(MycroftSkill):
             result = str(result).replace(".", ",")
         self.speak_dialog("result", data={"calculation":calculation, "result":result})
         self.log.info(eval(text[0]))
-        pass
 
     def oparator_validator(self, text): #### calculated and reduced until calculation possible
+        if ")" in text: ### if ( not found
+            if not "(" in text:
+                text = "( "+text
         f = True
         while f is True:
             try:
@@ -126,6 +138,7 @@ class Calculator(MycroftSkill):
                 f = True
         else:
             if text == None:
+                ##### todo send it to fallback
                 responce  = self.get_response("fail")
                 self.calculate_worker(responce)
                 return False
