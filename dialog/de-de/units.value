@@ -2,3 +2,4 @@ strom,ampere
 spannung,volt
 leistung,watt
 wiederstand, ohm
+bremsweg,brakingdistance

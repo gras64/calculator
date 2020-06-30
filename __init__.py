@@ -1,5 +1,7 @@
 import re
 import json
+import math
+#from sympy.physics import units
 from mycroft import MycroftSkill, intent_file_handler, intent_handler
 from adapt.intent import IntentBuilder
 from mycroft.util.parse import extract_number, normalize, extract_numbers
@@ -36,6 +38,7 @@ class Calculator(MycroftSkill):
         self.log.info("found "+text)
         if message.data.get("units", False): ### select unit or default calculation
             text = self.units_worker(text)
+            text = self.units_converter(text)
             self.units_operator(text)
         else:
             text = self.oparator_worker(text)
@@ -105,6 +108,7 @@ class Calculator(MycroftSkill):
                     text = text.replace(word, str(operator))
             self.log.info("after operator"+text)
         return text
+    
 
     def units_worker(self, text):
         ### extract units
@@ -127,36 +131,134 @@ class Calculator(MycroftSkill):
         self.log.info(str(units))
         return units
     
-    def units_operator(self, text): ### add units calculation here
+    def units_converter(self, text): ### todo make it better
+        for item in text.items():
+            item = list(item)
+            if "milli" in item[0]:
+                del text[item[0]]
+                if not item[1] is False:
+                    item[1] = item[1]/1000
+                item[0] = item[0].replace("milli", "")
+                text.update({item[0] : item[1]})
+            elif "centi" in item[0]:
+                del text[item[0]]
+                if not item[1] is False:
+                    item[1] = item[1]/100
+                item[0] = item[0].replace("centi", "")
+                text.update({item[0] : item[1]})
+            elif "deci" in item[0]:
+                del text[item[0]]
+                if not item[1] is False:
+                    item[1] = item[1]/10
+                item[0] = item[0].replace("deci", "")
+                text.update({item[0] : item[1]})
+            elif "micro" in item[0]:
+                del text[item[0]]
+                if not item[1] is False:
+                    item[1] = item[1]/1000000
+                item[0] = item[0].replace("micro", "")
+                text.update({item[0] : item[1]})
+            elif "nano" in item[0]:
+                del text[item[0]]
+                if not item[1] is False:
+                    item[1] = item[1]/1000000
+                item[0] = item[0].replace("nano", "")
+                text.update({item[0] : item[1]})
+            elif "kilo" in item[0]:
+                del text[item[0]]
+                if not item[1] is False:
+                    item[1] = item[1]*1000
+                item[0] = item[0].replace("kilo", "")
+                text.update({item[0] : item[1]})
+            elif "mega" in item[0]:
+                del text[item[0]]
+                if not item[1] is False:
+                    item[1] = item[1]*100000
+                item[0] = item[0].replace("mega", "")
+                text.update({item[0] : item[1]})
+            elif "giga" in item[0]:
+                del text[item[0]]
+                if not item[1] is False:
+                    item[1] = item[1]*1000000000
+                item[0] = item[0].replace("giga", "")
+                text.update({item[0] : item[1]})
+        self.log.info("after unit converter "+str(text))
+        return text
+    
+    def units_operator(self, unit): ### add units calculation here
+        
         calculation = []
         result = []
         f = True
         while True:
             try:
-                ###u r i
-                if not text["ohm"]:
-                    result = text["volt"]/text["ampere"]
-                    break
-                elif not text["volt"]:
-                    result = text["ohm"]*text["ampere"]
-                    break
-                elif not text["ampere"]:
-                    result = text["volt"]/text["ohm"]
-                    break
-                elif not text["watt"]: #### todo fix formel
-                    result = text["volt"]*text["ampere"]
-                    break
-                else:
-                    break
-                ###
+                for item in unit.items():
+                    item = list(item)
+                    if item[1] is False: #### add your formulas here
+                        ### Ohm's law
+                        if "ohm" in item[0]:
+                            result = unit["volt"]/unit["ampere"]
+                            break
+                        elif "volt" in item[0]:
+                            result = unit["ohm"]*unit["ampere"]
+                            break
+                        elif "ampere" in item[0]:
+                            result = unit["volt"]/unit["ohm"]
+                            break
+                        elif "watt" in item[0]:
+                            if "volt"  in unit.keys() and "ampere" in unit.keys():
+                                result = unit["volt"]*unit["ampere"]
+                            elif "ampere" in unit.keys() and "ohm" in unit.keys():
+                                result = (unit["ampere"]**2)*unit["ohm"]
+                            elif "volt" in unit.keys() and "ohm" in unit.keys():
+                                result = (unit["volt"]**2)*unit["ohm"]
+                            break
+                        ### circle
+                        if "diameter" in item[0]:
+                            if "radius" in unit.keys():
+                                result = unit["radius"]*2
+                            elif "scope"  in unit.keys():
+                                result = (unit["scope"]/(2*math.pi))*2
+                            elif "surface" in unit.keys():
+                                result = unit["surface"]/math.pi
+                                result = math.sqrt(result)*2
+                            break
+                        elif "radius" in item[0]:
+                            if "diameter" in unit.keys():
+                                result = unit["diameter"]/2
+                            elif "scope"  in unit.keys():
+                                result = unit["scope"]/(2*math.pi)
+                            elif "surface" in unit.keys():
+                                result = unit["surface"]/math.pi
+                                result = math.sqrt(result)
+                            break
+                        #elif "scope" in item[0]: ###
+                        #    if "diameter" in unit.keys():
+                        #        result = unit["diameter"]/2
+                        #    elif "radius"  in unit.keys():
+                        #        result = unit["scope"]/(2*math.pi)
+                        #    elif "surface" in unit.keys():
+                        #        result = unit["surface"]/math.pi
+                        #        result = math.sqrt(result)
+                        #     break
+                        #
+                        ### breaking distance car
+                        elif "brakingdistance" in item[0]:
+                            result = (unit["kmh"]/10)*(unit["kmh"]/10)
+                            break
+                        else:
+                            break
+                break
             except KeyError as var:
                 var = str(var)
                 self.log.info("fail with "+var)
-                text[var] = self.get_response("var.not.found", data={"var":str(var)})
-                text[var] = extract_number(text[var], short_scale=False, ordinals=False,
+                unit[var] = self.get_response("var.not.found", data={"var":str(var)})
+                if self.voc_match(unit[var], "cancel"):
+                    return
+                unit[var] = extract_number(unit[var], short_scale=False, ordinals=False,
                         lang=self.lang)     
         ### preparation the output
-        for item in text.items():
+        for item in unit.items():
             if item[1] is False:
                 item = list(item)
                 item[1] = str(result)

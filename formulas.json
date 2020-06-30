@@ -1,0 +1,18 @@
+{
+    "formulas": {
+        "Ohmslaw": [
+            {
+                "unit[ohm]" : "{unit["volt"]/unit["ampere"]}",
+                "unit[volt]" : "unit["ohm"]*unit["ampere"]",
+                "unit[ampere]" : "unit["volt"]/unit["ohm"]",
+                "unit[watt]" : "unit["volt"]*unit["ampere"]"
+            }
+        ],
+        "brakingdistance" [
+            {
+                "unit[braking distance]" : "(unit["kmh"]/10) x (unit["kmh"]/10)"
+            }
+                    
+        ]
+    }
+}
