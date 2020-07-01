@@ -1,5 +1,5 @@
-ampere,ampere
-volt,volt
-watt,watt
-ohm,ohm
+electricity,ampere
+tension,volt
+power,watt
+resisted,ohm
 brakingdistance,braking distance
