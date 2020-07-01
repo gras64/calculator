@@ -30,10 +30,10 @@ Productivity
 ## Development
 I designed a system that is very easy to expand and expand and is very flexible
 
-# add units
+### add units
 if you want to set up other units you have to specify them in the file "units.voc" and translate them into "units.value" in English. In addition, you should enter in the "units.voc" all forms like "gigawatt, megawatt, kilowatt, milliwatt" Enter "microwatt".
 
-# add formulas
+### add formulas
 if you want to add new formulas see my examples below "#### add your formulas here".
 
     if "ohm" in item[0]:
