@@ -1,5 +1,5 @@
 # <img src='https://raw.githack.com/FortAwesome/Font-Awesome/master/svgs/solid/calculator.svg' card_color='#000000' width='50' height='50' style='vertical-align:bottom'/> Calculator
-a simple calculator skill for Mycroft AI
+a not so simple calculator skill for Mycroft AI as an alternative to wolfram alpha
 
 ## About
 With this skill you can do a lot of arithmetic operations. you can also use formulas like ohm's law. the skill supports the conversion of units, formulas brackets, net and gross as well as sales price and calculations of any length "theoretically".
@@ -53,3 +53,8 @@ if you want to add new formulas see my examples below "#### add your formulas he
         elif "volt" in unit.keys() and "ohm" in unit.keys():
             result = (unit["volt"]**2)*unit["ohm"]
         break
+
+### Todo
+* edit before calculation
+* formulate more
+* much more
