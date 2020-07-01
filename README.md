@@ -5,7 +5,7 @@ a not so simple calculator skill for Mycroft AI as an alternative to wolfram alp
 With this skill you can do a lot of arithmetic operations. you can also use formulas like ohm's law. the skill supports the conversion of units, formulas brackets, net and gross as well as sales price and calculations of any length "theoretically".
 
 ## Examples
-* "what is 12 and 2,4 and 6,2 and 12,5"
+* "what is 12 and 2.4 and 6.2 and 12.5"
 * "addiere 4 and 5 from that gross" 
 * "divide 600 by 2 from that net"
 * "divide Bracket on 9 and 3 Bracket off and 2"
