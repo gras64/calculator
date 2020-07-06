@@ -2,7 +2,9 @@
 a not so simple calculator skill for Mycroft AI as an alternative to wolfram alpha
 
 ## About
-With this skill you can do a lot of arithmetic operations. you can also use formulas like ohm's law. the skill supports the conversion of units, formulas brackets, net and gross as well as sales price and calculations of any length "theoretically".
+With this skill you can do a lot of arithmetic operations. you can also use formulas like ohm's law. the skill supports the factors of units, formulas brackets, net and gross as well as sales price and calculations of any length "theoretically".in the new set version, the skill can also calculate the units back to their original form.
+
+possible factors are: giga, mega, kilo, centi, deci, milli, micro and nano.
 
 ## Examples
 * "what is 12 and 2.4 and 6.2 and 12.5"
@@ -31,28 +33,26 @@ Productivity
 I designed a system that is very easy to expand and expand and is very flexible
 
 ### add units
-if you want to set up other units you have to specify them in the file "units.voc" and translate them into "units.value" in English. In addition, you should enter in the "units.voc" all forms like "gigawatt, megawatt, kilowatt, milliwatt" Enter "microwatt".
+you only have to create new formulas the associated units are created independently with the factors, in gigawatts, megawatts, kilowatts, milliwatts "Enter" microwatts, nanowatts, centiwatts, deciwatts. A definition with the name of the unit you are looking for must be created under formula_switcher. then a formula like in the example with ohm's law. 
+
+if you want to set additional triggers you can also use units.voc and units.value for the translation. for example to make "volt" out of "voltage"
 
 ### add formulas
 if you want to add new formulas see my examples below "#### add your formulas here".
 
-    if "ohm" in item[0]:
-        result = unit["volt"]/unit["ampere"]
-        break
-    elif "volt" in item[0]:
-        result = unit["ohm"]*unit["ampere"]
-        break
-    elif "ampere" in item[0]:
-        result = unit["volt"]/unit["ohm"]
-        break
-    elif "watt" in item[0]:
-        if "volt"  in unit.keys() and "ampere" in unit.keys():
-            result = unit["volt"]*unit["ampere"]
-        elif "ampere" in unit.keys() and "ohm" in unit.keys():
-            result = (unit["ampere"]**2)*unit["ohm"]
-        elif "volt" in unit.keys() and "ohm" in unit.keys():
-            result = (unit["volt"]**2)*unit["ohm"]
-        break
+    def ohm(self):
+        return units["volt"]/units["ampere"]
+    def volt(self):
+        return units["ohm"]*units["ampere"]
+    def ampere(self):
+        return units["volt"]/units["ohm"]
+    def watt(self):
+        if "volt"  in units.keys() and "ampere" in units.keys():
+            return units["volt"]*units["ampere"]
+        elif "ampere" in units.keys() and "ohm" in units.keys():
+            return (units["ampere"]**2)*units["ohm"]
+        elif "volt" in units.keys() and "ohm" in units.keys():
+            return (units["volt"]**2)*units["ohm"]
 
 ### Todo
 * edit before calculation

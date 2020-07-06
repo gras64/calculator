@@ -23,6 +23,23 @@ class Calculator(MycroftSkill):
         self.gross = "* "+str((100+float(tax))/100) # * 1.093
         self.log.info("calculator factor load: sale="+self.sale+" gross="+self.gross+" net="+self.net)
         self.units_value = self.translate_namedvalues('units.value')
+        ### init unit
+        formula = formula_switcher()
+        self.init_units = []
+        for unit in formula.dir():
+            if not '__' in unit:
+                units = [unit, "milli"+unit, "centi"+unit, "deci"+unit, "micro"+unit, "nano"+unit, "kilo"+unit, "mega"+unit, "giga"+unit]
+                self.init_units.extend(units)
+        self.init_units.remove('switch')
+        self.init_units.remove('dir')
+        self.init_units.remove('units')
+        self.log.info("init units "+str(self.init_units))
+        self.load_unit_vocab() 
+
+    def load_unit_vocab(self): ### expand vocab
+        for unit in self.init_units:
+            self.register_vocabulary(unit, 'units')
+            #self.log.info("add vocab "+str(unit))
 
     @intent_handler(IntentBuilder("cal").one_of("tell_me", "replacement_word").optionally("calculate").
                     one_of("addition", "division", "multiplication", "subtraction", "net", "gross", "sale", "percent", "units").build())
@@ -38,8 +55,8 @@ class Calculator(MycroftSkill):
         self.log.info("found "+text)
         if message.data.get("units", False): ### select unit or default calculation
             text = self.units_worker(text)
-            text = self.units_converter(text)
-            self.units_operator(text)
+            text , factors = self.units_converter(text)
+            self.units_operator(text, factors)
         else:
             text = self.oparator_worker(text)
             text = self.num_cleaner(text)
@@ -115,7 +132,7 @@ class Calculator(MycroftSkill):
         line = text.split() 
         units = {}
         for nr, unit in enumerate(line):
-            if self.voc_match(unit, "units"):
+            if unit in self.init_units or self.voc_match(unit, "units"):
                 s = nr-1
                 try:
                     unit = self.units_value[unit] ### translate units to english
@@ -132,122 +149,55 @@ class Calculator(MycroftSkill):
         return units
     
     def units_converter(self, text): ### todo make it better
-        for item in text.items():
-            item = list(item)
-            if "milli" in item[0]:
-                del text[item[0]]
-                if not item[1] is False:
-                    item[1] = item[1]/1000
-                item[0] = item[0].replace("milli", "")
-                text.update({item[0] : item[1]})
-            elif "centi" in item[0]:
-                del text[item[0]]
-                if not item[1] is False:
-                    item[1] = item[1]/100
-                item[0] = item[0].replace("centi", "")
-                text.update({item[0] : item[1]})
-            elif "deci" in item[0]:
-                del text[item[0]]
-                if not item[1] is False:
-                    item[1] = item[1]/10
-                item[0] = item[0].replace("deci", "")
-                text.update({item[0] : item[1]})
-            elif "micro" in item[0]:
-                del text[item[0]]
-                if not item[1] is False:
-                    item[1] = item[1]/1000000
-                item[0] = item[0].replace("micro", "")
-                text.update({item[0] : item[1]})
-            elif "nano" in item[0]:
-                del text[item[0]]
-                if not item[1] is False:
-                    item[1] = item[1]/1000000
-                item[0] = item[0].replace("nano", "")
-                text.update({item[0] : item[1]})
-            elif "kilo" in item[0]:
-                del text[item[0]]
-                if not item[1] is False:
-                    item[1] = item[1]*1000
-                item[0] = item[0].replace("kilo", "")
-                text.update({item[0] : item[1]})
-            elif "mega" in item[0]:
-                del text[item[0]]
-                if not item[1] is False:
-                    item[1] = item[1]*100000
-                item[0] = item[0].replace("mega", "")
-                text.update({item[0] : item[1]})
-            elif "giga" in item[0]:
-                del text[item[0]]
-                if not item[1] is False:
-                    item[1] = item[1]*1000000000
-                item[0] = item[0].replace("giga", "")
-                text.update({item[0] : item[1]})
+        factors = {}
+        for key, value in list(text.items()):
+            del text[key]
+            if "milli" in key:
+                akey = key.replace("milli", "")
+                factor = '/1000'
+            elif "centi" in key:
+                akey = key.replace("centi", "")
+                factor = '/100'
+            elif "deci" in key:
+                akey = key.replace("deci", "")
+                factor = '/10'
+            elif "micro" in key:
+                akey = key.replace("micro", "")
+                factor = '/1000000'
+            elif "nano" in key:
+                akey = key.replace("nano", "")
+                factor = '/1000000000'
+            elif "kilo" in key:
+                akey = key.replace("kilo", "")
+                factor = '*1000'
+            elif "mega" in key:
+                akey = key.replace("mega", "")
+                factor = '*100000'
+            elif "giga" in key:
+                akey = key.replace("giga", "")
+                factor = '*key'
+            else:
+                factor = '*1'
+                akey = key
+            #text[akay] = [value, factor]
+            if not value is False:
+                text.update({akey : eval(str(value)+factor)}) ### calculate factor
+            else:
+                text.update({akey : value})
+            factors.update({akey : [key, factor]})
         self.log.info("after unit converter "+str(text))
-        return text
-    
-    def units_operator(self, unit): ### add units calculation here
-        
+        return text, factors
+
+    def units_operator(self, unit, factors): ### add units calculation here
         calculation = []
         result = []
         f = True
         while True:
             try:
-                for item in unit.items():
-                    item = list(item)
-                    if item[1] is False: #### add your formulas here
-                        ### Ohm's law
-                        if "ohm" in item[0]:
-                            result = unit["volt"]/unit["ampere"]
-                            break
-                        elif "volt" in item[0]:
-                            result = unit["ohm"]*unit["ampere"]
-                            break
-                        elif "ampere" in item[0]:
-                            result = unit["volt"]/unit["ohm"]
-                            break
-                        elif "watt" in item[0]:
-                            if "volt"  in unit.keys() and "ampere" in unit.keys():
-                                result = unit["volt"]*unit["ampere"]
-                            elif "ampere" in unit.keys() and "ohm" in unit.keys():
-                                result = (unit["ampere"]**2)*unit["ohm"]
-                            elif "volt" in unit.keys() and "ohm" in unit.keys():
-                                result = (unit["volt"]**2)*unit["ohm"]
-                            break
-                        ### circle
-                        if "diameter" in item[0]:
-                            if "radius" in unit.keys():
-                                result = unit["radius"]*2
-                            elif "scope"  in unit.keys():
-                                result = (unit["scope"]/(2*math.pi))*2
-                            elif "surface" in unit.keys():
-                                result = unit["surface"]/math.pi
-                                result = math.sqrt(result)*2
-                            break
-                        elif "radius" in item[0]:
-                            if "diameter" in unit.keys():
-                                result = unit["diameter"]/2
-                            elif "scope"  in unit.keys():
-                                result = unit["scope"]/(2*math.pi)
-                            elif "surface" in unit.keys():
-                                result = unit["surface"]/math.pi
-                                result = math.sqrt(result)
-                            break
-                        #elif "scope" in item[0]: ###
-                        #    if "diameter" in unit.keys():
-                        #        result = unit["diameter"]/2
-                        #    elif "radius"  in unit.keys():
-                        #        result = unit["scope"]/(2*math.pi)
-                        #    elif "surface" in unit.keys():
-                        #        result = unit["surface"]/math.pi
-                        #        result = math.sqrt(result)
-                        #     break
-                        #
-                        ### breaking distance car
-                        elif "brakingdistance" in item[0]:
-                            result = (unit["kmh"]/10)*(unit["kmh"]/10)
-                            break
-                        else:
-                            break
+                for key, value in list(unit.items()):
+                    if value is False: #### add your formulas here
+                        formula = formula_switcher()
+                        result = formula.switch(unit, key) ###see class formula_switcher
                 break
             except KeyError as var:
                 var = str(var)
@@ -258,15 +208,21 @@ class Calculator(MycroftSkill):
                 unit[var] = extract_number(unit[var], short_scale=False, ordinals=False,
                         lang=self.lang)     
         ### preparation the output
-        for item in unit.items():
-            if item[1] is False:
-                item = list(item)
-                item[1] = str(result)
-                result = item
+        for key, value in list(unit.items()):
+            akey = factors[key][0] ### factors back
+            if "/" in factors[key][1]:
+                factor = factors[key][1].replace("/", "*")
+            elif "*" in factors[key][1]:
+                factor = factors[key][1].replace("*", "/")
+            if value is False:
+                value = str(result)
+                okey = akey
+                result = eval(str(value)+factor) ### factors back
             else:
-                calculation.append(str(item[1])+" "+str(item[0])+" ")
+                value = eval(str(value)+factor)
+                calculation.append(str(value)+" "+str(akey)+" ")
         calculation = " ".join(calculation)
-        result = (str(result[1])+" "+str(result[0])+" ")
+        result = (str(result)+" "+str(okey)+" ")
         self.speak_dialog("result", data={"calculation":calculation, "result":result})
 
         
@@ -336,13 +292,73 @@ class Calculator(MycroftSkill):
         self.log.info("text "+str(text))
         return text
 
-
-    def gross_net(self, message):
-        self.speak("test")
-
     def shutdown(self):
         super(Calculator, self).shutdown()
 
 def create_skill():
     return Calculator()
+
+class formula_switcher():
+    units = {}
+    def dir(self):
+        return dir(formula_switcher)
+    def switch(self, unit, key):
+        global units
+        units = unit
+        default = "Incorrect"
+        return getattr(self, key, lambda: default)()
+    #### add your formulas here
+    ### Ohm's law
+    def ohm(self):
+        return units["volt"]/units["ampere"]
+    def volt(self):
+        return units["ohm"]*units["ampere"]
+    def ampere(self):
+        return units["volt"]/units["ohm"]
+    def watt(self):
+        if "volt"  in units.keys() and "ampere" in units.keys():
+            return units["volt"]*units["ampere"]
+        elif "ampere" in units.keys() and "ohm" in units.keys():
+            return (units["ampere"]**2)*units["ohm"]
+        elif "volt" in units.keys() and "ohm" in units.keys():
+            return (units["volt"]**2)*units["ohm"]
+        ### circle
+    def diameter(self):
+        if "radius" in units.keys():
+            return units["radius"]*2
+        elif "scope"  in units.keys():
+            return (units["scope"]/(2*math.pi))*2
+        elif "surface" in units.keys():
+            radius = units["surface"]/math.pi
+            return math.sqrt(radius)*2
+    def radius(self):
+        if "diameter" in units.keys():
+            return units["diameter"]/2
+        elif "scope"  in units.keys():
+            return units["scope"]/(2*math.pi)
+        elif "surface" in units.keys():
+            radius = units["surface"]/math.pi
+            return math.sqrt(radius)
+    def scope(self):
+        if "diameter" in units.keys():
+            radius = units["diameter"]/2
+            return 2*math.pi*radius
+        elif "radius"  in units.keys():
+            return 2*math.pi*units["radius"]
+        elif "surface" in units.keys():
+            result = units["surface"]/math.pi
+            radius = math.sqrt(result)
+            return 2*math.pi*radius
+    def surface(self):
+        if "diameter" in units.keys():
+            radius = units["diameter"]/2
+            return math.pi*(radius**2)
+        elif "radius"  in units.keys():
+            return math.pi*(units["radius"]**2)
+        elif "scope" in units.keys():
+            radius = units["surface"]/(2*math.pi)
+            return math.pi*(radius**2)
+    ### breaking distance car
+    def brakingdistance(self):
+        return (units["kmh"]/10)*(units["kmh"]/10)
 
