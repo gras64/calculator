@@ -1,0 +1,1 @@
+{"diameter": [false, false, "diameter", "*1"], "radius": [0.03, "meter", "millimeter", "/1000"]}

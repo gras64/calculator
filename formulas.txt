@@ -1,0 +1,1 @@
+{"brakingdistance": ["meter", "brakingdistance"], "diameter": ["meter", "durchmesser"], "radius": ["meter", "radius"], "scope": ["meter", "umfang"]}
