@@ -13,6 +13,8 @@ from mycroft.util.format import pronounce_number, nice_date, nice_time
 
 _author__ = 'gras64'
 
+ureg = pint.UnitRegistry()
+
 class Calculator(MycroftSkill):
     def __init__(self):
         MycroftSkill.__init__(self)
@@ -40,7 +42,7 @@ class Calculator(MycroftSkill):
         for unit in dir(formula):
             if not '__' in unit and not "switch" in unit and not "units" in unit:
                 self.log.info(unit)
-                self.init_units.extend([unit, "milli"+unit, "centi"+unit, "deci"+unit, "micro"+unit, "nano"+unit, "kilo"+unit, "mega"+unit, "giga"+unit])
+                self.init_units.extend([unit] + [key+unit for key in self.factors.keys()]) ### load intents of watt miliwatt magawatt ...
                 try:
                     operations = getattr(formula, unit)
                     for operation in dir(operations):
@@ -69,7 +71,7 @@ class Calculator(MycroftSkill):
         yaml_doc = yaml.load(input_file)
         return yaml_doc
 
-    def load_unit_vocab(self): ### expand 
+    def load_unit_vocab(self): ### expand
         """
 
         register_vocabulary for ['durchmesser', 'radius', 'umfang']
@@ -492,6 +494,7 @@ class Calculator(MycroftSkill):
 
 def create_skill():
     return Calculator()
+
 
 class formula_switcher():
     """old code
