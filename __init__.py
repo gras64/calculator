@@ -3,6 +3,7 @@ import yaml ##
 from os.path import os, abspath, dirname, join
 import json
 import math
+from json_database import JsonStorage
 #from sympy.physics import units
 from mycroft.messagebus.message import Message
 from mycroft import MycroftSkill, intent_file_handler, intent_handler
@@ -24,6 +25,11 @@ class Calculator(MycroftSkill):
         self.sale = "* "+str((100+float(sale))/100) # * 1.30
         self.net = "* "+str((100-float(tax))/100) # * 0.907
         self.gross = "* "+str((100+float(tax))/100) # * 1.093
+        self.operators={"addition":"+","substraction":"-","multiplication":"*", ### add aperators here
+                 "division": "/", "net": self.net, "gross": self.gross, "sale": self.sale, "clip.on":"(",
+                 "clip.off":")", "from.that": "from_that"} #net   *1.093 , gross *0.907
+        self.factors ={"milli": "/1000", "centi": "/100", "deci": "/10", "micro": "/1000000",
+                "nano":"/1000000000", "kilo": "*1000", "mega":"*100000", "giga":"*1000000000"}
         self.log.info("calculator factor load: sale="+self.sale+" gross="+self.gross+" net="+self.net)
         self.units_value = self.translate_namedvalues('units.value')
         self.tasks_value = self.translate_namedvalues('tasks.value')
@@ -55,8 +61,8 @@ class Calculator(MycroftSkill):
         #self.load_formulas()
 
     def write_variable(self, data, file):
-        with open('/opt/mycroft/skills/calculator.gras64/'+file+'.txt', 'w') as file:
-            file.write(json.dumps(data)) # use `json.loads` to do the reverse
+        with self.file_system.open(file, "w") as my_file:
+            my_file.write(json.dumps(data))  # use `json.loads` to do the reverse
     
     def load_formulas(self):
         input_file = open(join(dirname(__file__), 'formulas.yml'), "r")
@@ -152,14 +158,11 @@ class Calculator(MycroftSkill):
                 ###
         text= " ".join(line)
         ###
+        [line.pop(i) for i, word in enumerate(line) if self.voc_match(word, "replacement.word")] #schmeißt replacement words raus
         for word in line:
             #self.log.info("text1 "+text+" "+word)
-            if self.oparator_match(word):
-                for s in line:
-                    if self.voc_match(s, "replacement.word"):
-                        text = text.replace(s, str(word))
             operator = self.oparator_match(word)
-            if not operator is None: ##### todo problem with "and from that"
+            if operator: ##### todo problem with "and from that"
                 if operator == "from_that":
                     text = text.replace(word, ")")
                     text = "( "+text
@@ -302,70 +305,28 @@ class Calculator(MycroftSkill):
         return units
 
     def factor_matcher(self, key):
-        if "milli" in key:
-            akey = key.replace("milli", "")
-            factor = '/1000'
-        elif "centi" in key:
-            akey = key.replace("centi", "")
-            factor = '/100'
-        elif "deci" in key:
-            akey = key.replace("deci", "")
-            factor = '/10'
-        elif "micro" in key:
-            akey = key.replace("micro", "")
-            factor = '/1000000'
-        elif "nano" in key:
-            akey = key.replace("nano", "")
-            factor = '/1000000000'
-        elif "kilo" in key:
-            akey = key.replace("kilo", "")
-            factor = '*1000'
-        elif "mega" in key:
-            akey = key.replace("mega", "")
-            factor = '*100000'
-        elif "giga" in key:
-            akey = key.replace("giga", "")
-            factor = '*key'
+        for keyf, value in self.factors.items():
+            if keyf in word:
+                akey = word.replace(keyf, "")
+                factor = value
+                break
         else:
-            factor = '*1'
+            factor = "*1"
             akey = key
         return key, akey, factor
 
-    def oparator_match(self, word): ### add aperators here
-        if self.voc_match(word, "addition"):
-            operator = "+"
-        elif self.voc_match(word, "subtraction"):
-            operator = "-"
-        elif self.voc_match(word, "multiplication"):
-            operator = "*"
-        elif self.voc_match(word, "division"):
-            operator = "/"
-        elif self.voc_match(word, "net"):
-            operator = self.net # *1.093
-        elif self.voc_match(word, "gross"):
-            operator = self.gross # *0.907
-        elif self.voc_match(word, "sale"):
-            operator = self.sale
-        elif self.voc_match(word, "clip.on"):
-            operator = "("
-        elif self.voc_match(word, "clip.off"):
-            operator = ")"
-        #elif self.voc_match(word, "percent"): ##### todo fix
-        #    operator = "/100" ### todo
-        elif self.voc_match(word, "from.that"):
-            operator = "from_that"           
+    def oparator_match(self, word):
+        for key, value in self.operators.items():
+            if voc_match(word, key):
+                operator = value
+                break
         else:
-            operator = None
+            operator=None
         return operator
 
-    def units_shorter(self, unit):
-        self.log.info("unit shorter in: "+str(unit))
-        output= {}
-        for key, value in list(unit.items()):
-            units = value[0]
-            output.update({value[1] : units})
-        self.log.info("unit shorter out: "+str(output))
-        return output
+    def units_shorter(self, unit): #### apsolete
+        return {value[1]: value[0] for key, value in unit.items()}
+        #return {value[1]: value[0] for value in unit.values()}
 
     def units_operator(self, units):
         """[summary]
@@ -447,12 +408,12 @@ class Calculator(MycroftSkill):
         for key, whole in list(units.items()):
             value = whole[0]
             unit = whole[2]
-            factors = whole[3]
-            akey = factors[key][0] ### factors back
+            calc_factors = whole[3]
+            akey = calc_factors[key][0] ### factors back
             if "/" in factor[key][1]:
-                factor = factors[key][1].replace("/", "*")
-            elif "*" in factors[key][1]:
-                factor = factors[key][1].replace("*", "/")
+                factor = calc_factors[key][1].replace("/", "*")
+            elif "*" in calc_factors[key][1]:
+                factor = calc_factors[key][1].replace("*", "/")
             if value is False:
                 if isinstance(result, tuple): ##for force unit
                     self.log.info("test force unit")
@@ -610,5 +571,6 @@ class formula_switcher():
                 radius = units["surface"]/(2*math.pi)
                 return math.pi*(radius**2)
     ### breaking distance car
+
 
 
