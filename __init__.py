@@ -8,18 +8,18 @@ from json_database import JsonStorage
 from mycroft.messagebus.message import Message
 from mycroft import MycroftSkill, intent_file_handler, intent_handler
 from adapt.intent import IntentBuilder
+from adapt.engine import IntentDeterminationEngine
 from mycroft.util.parse import extract_number, normalize, extract_numbers
 from mycroft.util.format import pronounce_number, nice_date, nice_time
 
 _author__ = 'gras64'
-
-ureg = pint.UnitRegistry()
 
 class Calculator(MycroftSkill):
     def __init__(self):
         MycroftSkill.__init__(self)
 
     def initialize(self):
+        self.ureg = UnitRegistry()
         tax = self.settings.get('tax').replace(",", ".") \
             if self.settings.get('tax').replace(",", ".") else "9.3"
         sale = self.settings.get('sale') \
@@ -34,6 +34,7 @@ class Calculator(MycroftSkill):
                 "nano":"/1000000000", "kilo": "*1000", "mega":"*100000", "giga":"*1000000000"}
         self.log.info("calculator factor load: sale="+self.sale+" gross="+self.gross+" net="+self.net)
         self.units_value = self.translate_namedvalues('units.value')
+        self.log.info(str(self.units_value))
         self.tasks_value = self.translate_namedvalues('tasks.value')
         ### init unit
         self.init_units = []
@@ -55,12 +56,21 @@ class Calculator(MycroftSkill):
                             self.wish_overview.update({operation : [unit, formula]}) ######
                 except:
                     pass
+        calculate = 3 * self.ureg.meter + 4 * self.ureg.cm
+        self.log.info("calculate "+repr(calculate))
+        test = self.ureg
+        self.write_variable([key for key in dir(self.ureg)], "all_units")
         self.write_variable(self.init_units, "initunits")
         self.write_variable(self.wish_overview, "formulas") ############################################################################
         self.log.info("init units "+str(self.init_units))
         self.log.info("formulas startup "+str(self.wish_overview))
         self.load_unit_vocab()
         #self.load_formulas()
+        
+        liste=["meter", "kilometer"]
+        for i in liste:
+            a = 1 * self.ureg[i]
+            self.log.info(a.format_babel(locale='de_DE'))
 
     def write_variable(self, data, file):
         with self.file_system.open(file, "w") as my_file:
@@ -83,27 +93,34 @@ class Calculator(MycroftSkill):
             self.register_vocabulary(self.wish_overview[key][1], 'tasks')
 
     @intent_handler(IntentBuilder("cal").one_of("tell_me", "replacement_word").optionally("calculate").
-                    one_of("addition", "division", "multiplication", "subtraction", "net", "gross", "sale", "percent", "units", "tasks").build())
-    def calculate_handler(self, message):
-            text = message.utterance_remainder()
-            number = extract_number(text, lang=self.lang)
-            #if number is (""):
-            #    return False
-            #if type(number) is int:
-            self.utterance = message.data['utterance']
-            self.calculate_worker(self.utterance, message)
+                    one_of("addition", "division", "multiplication", "subtraction", "net", "gross", "sale", "percent").build())
+    def simple_calculate_handler(self, message):
+        text = message.utterance_remainder()
+        number = extract_number(text, lang=self.lang)
+        #if number is (""):
+        #    return False
+        #if type(number) is int:
+        self.utterance = message.data['utterance']
+        self.calculate_worker(self.utterance, message)
+
+    @intent_handler(IntentBuilder("formul").one_of("tell_me", "replacement_word").optionally("calculate").
+                    one_of("units", "tasks").build())
+    def formul_calculate_handler(self, message):
+        text = message.utterance_remainder()
+        number = extract_number(text, lang=self.lang)
+        text = self.num_worker(text)
+        self.log.info("found "+text)
+        self.units_operator(self.units_converter(self.units_worker(text)))     ######### work with formulas
 
     def calculate_worker(self, text, message):
         text = self.num_worker(text)
         self.log.info("found "+text)
-        if message.data.get("units", False): ### select unit or default calculation
-            self.units_operator(self.units_converter(self.units_worker(text)))     ######### work with formulas
-        else:   ####calculate without calculation
-            text = self.oparator_worker(text)
-            text = self.num_cleaner(text)
-            text = self.oparator_validator(text)
-            if not text is False:
-                text = self.oparator_calculator(text)
+        text = self.oparator_worker(text)
+        text = self.num_cleaner(text)
+        text = self.oparator_validator(text)
+        if not text is False:
+            text = self.oparator_calculator(text)
+
 
 
     def num_worker(self, line):
@@ -494,6 +511,49 @@ class Calculator(MycroftSkill):
 
 def create_skill():
     return Calculator()
+
+from pint import UnitRegistry
+from collections import OrderedDict
+import re
+ureg = UnitRegistry()
+
+
+class pint_calculator():
+    string = []
+    units = []
+    
+
+    def translate_unit(self, unitname, translation):
+        global string, splitted
+    
+        r = re.compile(".*"+unitname)
+        checkpos=splitted.index(list(filter(r.match, splitted))[0]) #der list(...) ausdruck ist nur relevant wenn wir milli,... aus self.units herauslassen
+        prefix=splitted[checkpos].split(unitname)[0]
+        #checkt das wort vor unit ob es eine weitere unit ist (inkl. "per") 
+        if splitted[checkpos-1] not in units.keys() and splitted[checkpos-1] not in units.values():#items
+            rx_pattern = "{"+prefix+translation.lower()+"}.*"+prefix+translation.lower()
+        else:
+            rx_pattern = prefix+translation.lower()
+        #ersetzt das wort mit dem englischen
+        string=string.replace(unitname, translation)
+        splitted=string.split(" ")
+    
+        return rx_pattern
+
+    def calculate(self, units, string):
+        splitted=string.lower().split(" ")
+        #ruft translate_unit() auf wenn er eine übersetzbare Einheit findet
+        patternlist=[]
+        for word in splitted:
+            for unit, trans in units.items():
+                if re.match(r".*"+unit,word):
+                    rx=translate_unit(unit, trans)
+                    if re.match(r"^{.*}",rx): 
+                        patternlist.append(rx)
+                    else:
+                        patternlist[-1]+=".*"+rx
+                    break
+        print(str(patternlist))
 
 
 class formula_switcher():
