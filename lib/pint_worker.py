@@ -3,6 +3,7 @@ from collections import OrderedDict
 import re
 ureg = UnitRegistry()
 
+__author__ = 'gras64', 'sgee_'
 __name__ = "pint_worker"
 
 units=OrderedDict([("ampere","ampere"), ("watt","watt"), ("ohm","ohm"), ("meter","meter"), ("sekunden","seconds"), ("sekunde","second"), ("pro","per"), ("centimeter","centimeter")]) 
