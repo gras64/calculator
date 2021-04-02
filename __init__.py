@@ -3,6 +3,7 @@ import yaml ##
 from os.path import os, abspath, dirname, join
 import json
 import math
+#import spacy
 from json_database import JsonStorage
 #from sympy.physics import units
 from mycroft.messagebus.message import Message
@@ -11,6 +12,7 @@ from adapt.intent import IntentBuilder
 from adapt.engine import IntentDeterminationEngine
 from mycroft.util.parse import extract_number, normalize, extract_numbers
 from mycroft.util.format import pronounce_number, nice_date, nice_time
+from .lib.pint_worker import worker
 
 _author__ = 'gras64'
 
@@ -19,15 +21,28 @@ class Calculator(MycroftSkill):
         MycroftSkill.__init__(self)
 
     def initialize(self):
-        self.ureg = UnitRegistry()
+        formulfiles = {
+            "en-us":"default_en.txt",
+            "de-de":"default_en.txt",
+        }
+        spacy_lang = {
+            "en-us": "de_core_news_lg",
+            "de-de": "de_core_news_lg",
+        }
+ #       self.nlp = spacy.load(spacy_lang[self.lang])
+        pint_formul = join(
+            abspath(dirname(__file__)), formulfiles[self.lang]
+        )
+        self.ureg = UnitRegistry(pint_formul)
         tax = self.settings.get('tax').replace(",", ".") \
             if self.settings.get('tax').replace(",", ".") else "9.3"
         sale = self.settings.get('sale') \
             if self.settings.get('sale') else "30"
+        self.register_entity_file('task.entity')
         self.sale = "* "+str((100+float(sale))/100) # * 1.30
         self.net = "* "+str((100-float(tax))/100) # * 0.907
         self.gross = "* "+str((100+float(tax))/100) # * 1.093
-        self.operators={"addition":"+","substraction":"-","multiplication":"*", ### add aperators here
+        self.operators={"addition":"+","subtraction":"-","multiplication":"*", ### add aperators here
                  "division": "/", "net": self.net, "gross": self.gross, "sale": self.sale, "clip.on":"(",
                  "clip.off":")", "from.that": "from_that"} #net   *1.093 , gross *0.907
         self.factors ={"milli": "/1000", "centi": "/100", "deci": "/10", "micro": "/1000000",
@@ -65,12 +80,42 @@ class Calculator(MycroftSkill):
         self.log.info("init units "+str(self.init_units))
         self.log.info("formulas startup "+str(self.wish_overview))
         self.load_unit_vocab()
+        self.load_test_sentence()
         #self.load_formulas()
         
         liste=["meter", "kilometer"]
         for i in liste:
             a = 1 * self.ureg[i]
             self.log.info(a.format_babel(locale='de_DE'))
+
+    def load_test_sentence(self):
+        sentence = ("wie viel volt ergeben sich aus 30 ampere und 40 watt",
+                    "wie lang ist der zurückgelegte Weg nach 50 millisekunden bei 12 meter pro sekunde und 30 ampere",
+                    "was ist die fallgeschwindigkeit nach 12 sekunden",
+                    #"wie ist der weg bei 150 centimeter umfang und 2 meter mit 5 sekunden durchhaltevermögen",
+                    "wie ist die spannung bei 20 ampere und 3000 milliohm")
+        for text in sentence:
+            worker(text)
+        #    self.formul_calculate_handler(text)
+
+
+    def unit_extractor(self, string):
+        pass
+        #self.log.info("type "+str(type(r))+str(r.dimensionality))
+        #pint.unit.build_unit_class.<locals>.Unit
+        #r.dimensionality
+        #<UnitsContainer({'[current]': -2, '[length]': 2, '[mass]': 1, '[time]': -3})> # Basis SI; die werden im endeffekt verglichen
+
+        #self.log.info(r)
+        #if pintObj[0][1].is_compatible_with(r):
+        #    u=pintObj[0][1]
+        #self.log.info(r)
+
+  #      doc=self.nlp(text)
+   #     for token in doc:
+    #        output = " ".join(["("+token.text+" "+token.pos_+")" for token in doc if token.pos_ == 'NOUN' or token.pos_ == 'NUM'])     
+     #   self.log.info(output)
+        #self.log.info(str(text.split(' und ')))
 
     def write_variable(self, data, file):
         with self.file_system.open(file, "w") as my_file:
@@ -103,14 +148,23 @@ class Calculator(MycroftSkill):
         self.utterance = message.data['utterance']
         self.calculate_worker(self.utterance, message)
 
-    @intent_handler(IntentBuilder("formul").one_of("tell_me", "replacement_word").optionally("calculate").
-                    one_of("units", "tasks").build())
-    def formul_calculate_handler(self, message):
-        text = message.utterance_remainder()
+    @intent_file_handler('formula.calculate.intent')
+    def formul_handler(self, message):
+        task = message.data.get('task')
+        text = message.data.get('unitstr')
         number = extract_number(text, lang=self.lang)
         text = self.num_worker(text)
-        self.log.info("found "+text)
-        self.units_operator(self.units_converter(self.units_worker(text)))     ######### work with formulas
+        self.log.info("found "+str(text)+" task "+str(task))
+        #self.units_operator(self.units_converter(self.units_worker(text)))
+
+    #@intent_handler(IntentBuilder("formul").one_of("tell_me", "replacement_word").optionally("calculate").
+    #                one_of("units", "tasks").build())
+    #def formul_calculate_handler(self, message):
+    #    text = message.utterance_remainder()
+    #    number = extract_number(text, lang=self.lang)
+    #    text = self.num_worker(text)
+    #    self.log.info("found "+text)
+    #    self.units_operator(self.units_converter(self.units_worker(text)))     ######### work with formulas
 
     def calculate_worker(self, text, message):
         text = self.num_worker(text)
@@ -336,7 +390,7 @@ class Calculator(MycroftSkill):
 
     def oparator_match(self, word):
         for key, value in self.operators.items():
-            if voc_match(word, key):
+            if self.voc_match(word, key) is None:
                 operator = value
                 break
         else:
