@@ -1,0 +1,48 @@
+länge,length
+zeit,time
+strom,current
+helichkeit,luminosity
+masse,mass
+stoff,substance
+temperatur,temperature
+frequenz,frequency
+berreich,area
+vollumen,volume
+wellenlänge,wavenumber
+geschwindigkeit,velocity
+beschleunigung,acceleration
+kraft,force
+energie,energy
+leistung,power
+impulse,momentum
+dichte,density
+druck,pressure
+drehmoment,torque
+viskosität,viscosity
+kinematische viskosität,kinematic_viscosity
+flüssigkeit,fluidity
+konzentration,concentration
+katalytische aktivität,activity
+entropy,entropy
+modulare entropy,molar_entropy
+wärmeableitung,heat_transmission
+leuchtkraft,luminance
+Lichtstrom,luminous_flux
+beleuchtungsstärke,illuminance
+ladung,charge
+elektrisches Potenzial,electric_potential
+elektrisches feld,electric_field
+elektrisches verschiebungsfeld,electric_displacement_field
+wiederstand,resistance
+spezifische widerstand,resistivity
+leitwert,conductance
+kapatzität,capacitance
+induktivität,inductance
+induktionsfluss,magnetic_flux
+magnetfeld,magnetic_field
+magnetomotorische kraft,magnetomotive_force
+feldstärke,magnetic_field_strength
+elektrisches drehmoment,electric_dipole
+elektrisches moment,electric_quadrupole
+magnetisches drehmoment,magnetic_dipole
+bremsweg,brakingdistance

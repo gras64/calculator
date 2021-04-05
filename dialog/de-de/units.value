@@ -1,5 +1,90 @@
-strom,ampere
-spannung,volt
-leistung,watt
-wiederstand,ohm
-bremsweg,brakingdistance
+sekunden,seconds
+sekunde,second
+stunde,hour
+tag,day
+woche,week
+jahr,year
+monat,month
+jahrhundert,century
+jahrtausend,millennium
+weltalter,eon
+Sedimentationskoeffizient,svedberg
+atomare zeiteinheit,atomic_unit_of_time
+gregorianisches jahr,gregorian_year
+schaltjahr,leap_year
+sterntag,sidereal_day
+sternmonat,sidereal_month
+tropischher monat,tropical_month
+synodischer monat,synodic_month
+plancksche zeit,planck_tcelsiusime
+augeblick,shake
+radiant,radian
+zähler,conductance
+umfang,circle
+grad celcius,degree
+bogensekunde,arcsecond
+bogenminute,arcminute
+grad,grade
+Steradiant,steradian
+quadratmeter,square_degree
+angström,angstrom
+lichtjahr,lightyear
+lichtgechwindigkeit,speed_of_light
+astronomische einheiten,astronomical_unit
+Parallaxensekunde,parsec
+seemeile,nautical_mile
+astronomische längeneinheit,atomic_unit_of_length
+plancksche länge,planck_length
+metrische tonne,tonne
+atommasse,amu
+atomare masse,atomic_mass_constan
+atomgewicht,dalton
+gran,grain
+plancksche masse,planck_mass
+atomare temperatureinheit,atomic_unit_of_temperature
+planksche temperatur,planck_temperature
+ar,are
+schäune,brakingdistance
+hektar,hectare
+raummeter,stere
+umdrehungen pro minute,revolutions_per_minute
+umdrehungen pro sekunde,revolutions_per_second
+zahl pro Sekunde,counts_per_second
+knoten,knot
+kilometer pro stunde,kilometer_per_hour
+Kilometer pro sekunde,kilometer_per_second
+meter pro sekunde,meter_per_second
+fuß pro sekunde,foot_per_second
+kraft kilogramm,force_kilogram
+kraft gramm,force_gram
+wattstunde,watt_hour
+Kalorie,calorie
+internationale Kalorie,international_calorie
+Britische Wärmeeinheit,british_thermal_unit
+unbestimmte wärmeeinheit,therm
+öleinheit,tonne_of_oil_equivalent
+atmosphärenliter,atmosphere_liter
+pferdestärke,horsepower
+elektrische pferdestärke,electrical_horsepower
+mechanische pferdestärke,metric_horsepower
+kühltonne,refrigeration_ton
+standartliter pro minute,standard_liter_per_minute
+wasser,water
+schalldruckpegel,sound_pressure_level
+schaldruck,sound_pressure_level
+fuß pfund,foot_pound
+atomare masseneinheit,mol
+enzymeinheit,enzyme_unit
+entropy einheit,entropy_unit
+röntgen,roentgen
+spitzensonnestunde,peak_sun_hour
+atomare intensitätseinheit,atomic_unit_of_intensity
+atomare stromeinheit,atomic_unit_of_current
+plancksche stromeinheit,planck_current
+ampere stunde,ampere_hour
+atomare elektrische feldeinheit,atomic_unit_of_electric_field
+amperewindung,ampere_turn
+borsches magneton,bohr_magneton
+nucleare magneton,nuclear_magneton
+dezibel milliwatt,decibelmilliwatt
+dezibel microwatt,decibelmicrowatt

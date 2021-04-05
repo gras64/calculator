@@ -12,7 +12,7 @@ from adapt.intent import IntentBuilder
 from adapt.engine import IntentDeterminationEngine
 from mycroft.util.parse import extract_number, normalize, extract_numbers
 from mycroft.util.format import pronounce_number, nice_date, nice_time
-from .lib.pint_worker import worker
+from .pint_worker import worker, calculate
 
 _author__ = 'gras64'
 
@@ -49,7 +49,7 @@ class Calculator(MycroftSkill):
                 "nano":"/1000000000", "kilo": "*1000", "mega":"*100000", "giga":"*1000000000"}
         self.log.info("calculator factor load: sale="+self.sale+" gross="+self.gross+" net="+self.net)
         self.units_value = self.translate_namedvalues('units.value')
-        self.log.info(str(self.units_value))
+        self.log.info("units value "+str(self.units_value))
         self.tasks_value = self.translate_namedvalues('tasks.value')
         ### init unit
         self.init_units = []
@@ -80,6 +80,7 @@ class Calculator(MycroftSkill):
         self.log.info("init units "+str(self.init_units))
         self.log.info("formulas startup "+str(self.wish_overview))
         self.load_unit_vocab()
+        self.load_pint_translation()
         self.load_test_sentence()
         #self.load_formulas()
         
@@ -89,18 +90,30 @@ class Calculator(MycroftSkill):
             self.log.info(a.format_babel(locale='de_DE'))
 
     def load_test_sentence(self):
-        sentence = ("wie viel volt ergeben sich aus 30 ampere und 40 watt",
+        sentence = ("wie viel spannung ergeben sich aus 30 ampere und 40 watt",
                     "wie lang ist der zurückgelegte Weg nach 50 millisekunden bei 12 meter pro sekunde und 30 ampere",
                     "was ist die fallgeschwindigkeit nach 12 sekunden",
-                    #"wie ist der weg bei 150 centimeter umfang und 2 meter mit 5 sekunden durchhaltevermögen",
-                    "wie ist die spannung bei 20 ampere und 3000 milliohm")
+                    "wie ist der weg bei 150 meter radius und 2 centimeter mit 5 sekunden durchhaltevermögen",
+                    "wie ist der weg bei 150 centimeter umfang und 2 meter mit 5 sekunden durchhaltevermögen",
+                    "wie ist die spannung bei 20 ampere und 3000 milliohm",
+                    "wie ist die spannung bei 20 ampere und und und und 3000 ohm und 60 ohm und 20 ampere",
+                    "und 20 ampere 3000 ohm")
         for text in sentence:
-            worker(text)
+            pintObj, text =  worker(text)
+            self.ureg.units
+            #self.unit_extractor(text)
+            #self.log.info(calculate(pintObj, "volt"))
+        self.log.info("units ureg "+str(self.ureg.units))
+        self.log.info("parse "+str(self.ureg.parse_unit_name("volt")))
+        #task, text =translate_unit(task, task, [task])
+        #self.log.info("task "+task)
+
         #    self.formul_calculate_handler(text)
 
 
     def unit_extractor(self, string):
         pass
+        #['{ampere}.*ampere', '{watt}.*watt']
         #self.log.info("type "+str(type(r))+str(r.dimensionality))
         #pint.unit.build_unit_class.<locals>.Unit
         #r.dimensionality
@@ -125,6 +138,12 @@ class Calculator(MycroftSkill):
         input_file = open(join(dirname(__file__), 'formulas.yml'), "r")
         yaml_doc = yaml.load(input_file)
         return yaml_doc
+
+    def load_pint_translation(self):
+        for unit in self.units_value:
+            self.ureg.define(unit+' = '+self.units_value[unit])
+        
+
 
     def load_unit_vocab(self): ### expand
         """
